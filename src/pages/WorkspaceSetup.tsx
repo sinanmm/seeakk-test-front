@@ -17,12 +17,15 @@ export interface WorkspaceFormData {
     language: string;
     currencyLocale: string;
     loadSampleData: boolean;
+    requestedUsers: number;
+    requestedMonths: number;
 }
 
 export interface WorkspaceMetaLists {
     timeZones: string[];
     languages: { code: string; name: string }[];
     currencies: { code: string; name: string }[];
+    billing?: { pricePerUserPerMonth: number; currency: string };
 }
 
 const WorkspaceSetup = () => {
@@ -39,7 +42,9 @@ const WorkspaceSetup = () => {
         timeZone: '',
         language: '',
         currencyLocale: '',
-        loadSampleData: true
+        loadSampleData: true,
+        requestedUsers: 1,
+        requestedMonths: 1
     });
 
     const normalizeRoleKey = (value?: string | null): string =>
@@ -52,9 +57,9 @@ const WorkspaceSetup = () => {
                 console.log('[DEBUG] Workspace Config Request Started');
                 const response = await api.get('/workspace/config-meta');
                 console.log('[DEBUG] Workspace Config Response Received', response.data);
-                const { lists, defaults } = response.data;
+                const { lists, defaults, billing } = response.data;
 
-                setMetaLists(lists);
+                setMetaLists({ ...lists, billing });
 
                 setFormData(prev => ({
                     ...prev,
@@ -96,6 +101,11 @@ const WorkspaceSetup = () => {
             toast.error("Company Name and Employee Count are required.", {
                 icon: '🏢',
             });
+            return;
+        }
+
+        if (formData.requestedUsers <= 0 || formData.requestedMonths <= 0) {
+            toast.error("Number of users and months must be at least 1.");
             return;
         }
 

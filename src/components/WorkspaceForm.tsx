@@ -1,5 +1,5 @@
 import React, { ChangeEvent, FormEvent } from 'react';
-import { Building2, Users, Globe2, Languages, Coins, CheckCircle2, ChevronRight, Loader2, Sparkles, LucideIcon, ImagePlus, X } from 'lucide-react';
+import { X, ImagePlus, Building2, Users, Globe2, Languages, Coins, Loader2, ChevronRight, CheckCircle2, Sparkles, Calendar, Calculator, LucideIcon } from 'lucide-react';
 import SearchableSelect from './SearchableSelect';
 import { WorkspaceFormData, WorkspaceMetaLists } from '../pages/WorkspaceSetup';
 import BrandLogo from './BrandLogo';
@@ -163,6 +163,52 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ formData, handleChange, s
                                 placeholder="Search currency..."
                             />
                         </InputWrapper>
+                    </div>
+                </div>
+
+                {/* Billing & Subscription Selection */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-2">
+                    <div className="flex-1 min-w-0">
+                        <InputWrapper label="Number of Users" icon={Users}>
+                            <input
+                                type="number"
+                                name="requestedUsers"
+                                min="1"
+                                value={formData.requestedUsers}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-medium"
+                                required
+                            />
+                        </InputWrapper>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <InputWrapper label="Number of Months" icon={Calendar}>
+                            <input
+                                type="number"
+                                name="requestedMonths"
+                                min="1"
+                                value={formData.requestedMonths}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-medium"
+                                required
+                            />
+                        </InputWrapper>
+                    </div>
+                </div>
+
+                {/* Live Price Calculation Summary */}
+                <div className="mb-4 bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+                    <Calculator className="text-emerald-500 mt-0.5 flex-shrink-0" size={18} />
+                    <div>
+                        <h4 className="text-sm font-bold text-gray-900 mb-1">Subscription Summary</h4>
+                        <div className="text-xs text-gray-600 font-medium space-y-1">
+                            <p>
+                                {formData.requestedUsers} Users × {formData.requestedMonths} Months × {lists?.billing?.currency === 'INR' ? '₹' : (lists?.billing?.currency || '')}{lists?.billing?.pricePerUserPerMonth || 499}
+                            </p>
+                            <p className="text-emerald-700 font-bold text-sm mt-1">
+                                Total: {lists?.billing?.currency === 'INR' ? '₹' : (lists?.billing?.currency || '')}{(formData.requestedUsers || 1) * (formData.requestedMonths || 1) * (lists?.billing?.pricePerUserPerMonth || 499)}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
