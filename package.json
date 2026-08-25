@@ -23,6 +23,7 @@
     "leaflet": "^1.9.4",
     "libphonenumber-js": "^1.13.8",
     "lucide-react": "^0.577.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-dropzone": "^15.0.0",

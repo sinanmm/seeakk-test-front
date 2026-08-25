@@ -8,6 +8,7 @@ export interface WorkspaceConfigState {
   companyName: string | null;
   logoUrl: string | null;
   employeeCount: string | null;
+  billingStatus: string | null;
   loadSampleData: boolean;
   isLoaded: boolean;
   isLoading: boolean;
@@ -21,6 +22,7 @@ export interface WorkspaceConfigState {
     companyName?: string | null;
     logoUrl?: string | null;
     employeeCount?: string | null;
+    billingStatus?: string | null;
     loadSampleData?: boolean;
   }) => void;
 }
@@ -36,6 +38,7 @@ export const useWorkspaceStore = create<WorkspaceConfigState>((set, get) => ({
   companyName: null,
   logoUrl: null,
   employeeCount: null,
+  billingStatus: null,
   loadSampleData: false,
   isLoaded: false,
   isLoading: false,
@@ -57,6 +60,7 @@ export const useWorkspaceStore = create<WorkspaceConfigState>((set, get) => ({
       const companyName = workspace?.companyName || null;
       const logoUrl = workspace?.logoUrl || null;
       const employeeCount = workspace?.employeeCount || null;
+      const billingStatus = workspace?.billingStatus || null;
       const loadSampleData = Boolean(workspace?.loadSampleData);
 
       set({
@@ -66,6 +70,7 @@ export const useWorkspaceStore = create<WorkspaceConfigState>((set, get) => ({
         companyName,
         logoUrl,
         employeeCount,
+        billingStatus,
         loadSampleData,
         isLoaded: true,
         isLoading: false,

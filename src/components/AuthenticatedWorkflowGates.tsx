@@ -7,6 +7,7 @@ import { useAuthenticatedWorkflowEnabled } from '../hooks/useAuthenticatedWorkfl
 import useWorkspaceStore from '../store/useWorkspaceStore';
 import FollowupPostActionConfirmationModal from './followup/FollowupPostActionConfirmationModal';
 import { useFollowupWorkflowStore } from '../store/followupWorkflowStore';
+import BillingAccessGate from './BillingAccessGate';
 
 const LeadFormDrawer = lazy(() => import('../pages/leads/components/LeadFormDrawer'));
 
@@ -58,15 +59,17 @@ const AuthenticatedWorkflowGates: React.FC<Props> = ({ children }) => {
   }
 
   return (
-    <MandatoryOverdueFollowUpGate>
-      <MandatoryFollowUpContinuationGate>
-        <MandatoryAttendanceGate>
-          {children}
-          <FollowupPostActionConfirmationModal />
-          <GlobalFollowupWorkflowListener />
-        </MandatoryAttendanceGate>
-      </MandatoryFollowUpContinuationGate>
-    </MandatoryOverdueFollowUpGate>
+    <BillingAccessGate>
+      <MandatoryOverdueFollowUpGate>
+        <MandatoryFollowUpContinuationGate>
+          <MandatoryAttendanceGate>
+            {children}
+            <FollowupPostActionConfirmationModal />
+            <GlobalFollowupWorkflowListener />
+          </MandatoryAttendanceGate>
+        </MandatoryFollowUpContinuationGate>
+      </MandatoryOverdueFollowUpGate>
+    </BillingAccessGate>
   );
 };
 
