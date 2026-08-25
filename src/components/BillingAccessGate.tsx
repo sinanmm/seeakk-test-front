@@ -19,7 +19,7 @@ const BillingAccessGate: React.FC<BillingAccessGateProps> = ({ children }) => {
     return null; 
   }
 
-  if (billingStatus === 'PAYMENT_REQUIRED') {
+  if (billingStatus === 'PAYMENT_REQUIRED' || billingStatus === 'EXPIRED') {
     return (
       <Suspense fallback={<SeeakkProductLoader fullScreen={true} />}>
         <PaymentPage />

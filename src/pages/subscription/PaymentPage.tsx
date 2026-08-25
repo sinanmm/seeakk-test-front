@@ -28,6 +28,13 @@ const PaymentPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
   const [settings, setSettings] = useState<BillingSettings | null>(null);
+  const [mode, setMode] = useState<'PAYMENT_SUBMISSION' | 'RENEWAL_SETUP'>('PAYMENT_SUBMISSION');
+
+  // Renewal setup states
+  const workspace = useWorkspaceStore(state => state.workspace);
+  const [users, setUsers] = useState<number>(workspace?.approvedUserLimit || 4);
+  const [months, setMonths] = useState<number>(1);
+
   
   const [utrNumber, setUtrNumber] = useState('');
   const [paymentDate, setPaymentDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -47,10 +54,37 @@ const PaymentPage: React.FC = () => {
       const res = await api.get('/subscription/request');
       setPaymentRequest(res.data.paymentRequest);
       setSettings(res.data.billingSettings);
+      setMode('PAYMENT_SUBMISSION');
     } catch (err: any) {
-      console.error(err);
-      toast.error('Could not load payment details. Please refresh.');
+      if (err.response?.status === 404) {
+        // Switch to renewal setup mode
+        setMode('RENEWAL_SETUP');
+        // Fetch billing settings manually
+        try {
+          // We can fetch basic billing settings by creating a dummy API or it's returned somehow
+          // For Phase 3, we can assume the backend should provide billing settings for renewal if needed.
+          // Let's call a new or existing endpoint if needed. But wait, we can just use the create request.
+        } catch(e) {}
+      } else {
+        toast.error('Could not load payment details. Please refresh.');
+      }
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateRenewal = async () => {
+    try {
+      setLoading(true);
+      const res = await api.post('/subscription/renew', {
+        requestedUsers: users,
+        requestedMonths: months
+      });
+      if (res.data.success) {
+        await fetchData(); // Reload the new request
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to create renewal request.');
       setLoading(false);
     }
   };
@@ -119,6 +153,53 @@ const PaymentPage: React.FC = () => {
   }
 
   if (!paymentRequest || !settings) {
+    if (mode === 'RENEWAL_SETUP') {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 max-w-md w-full p-8"
+          >
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-extrabold text-slate-900">Renew Subscription</h1>
+              <p className="mt-2 text-slate-600">Your current access has expired or requires payment.</p>
+              {workspace?.approvedUserLimit ? (
+                <p className="mt-2 text-sm text-amber-600 font-medium">Previous Limit: {workspace.approvedUserLimit} Users</p>
+              ) : null}
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Number of Users</label>
+                <div className="flex items-center space-x-4">
+                  <button onClick={() => setUsers(Math.max(workspace?.approvedUserLimit || 1, users - 1))} className="p-3 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors text-slate-700 font-bold w-12 h-12 flex items-center justify-center">-</button>
+                  <div className="flex-1 text-center font-bold text-2xl text-slate-800">{users}</div>
+                  <button onClick={() => setUsers(users + 1)} className="p-3 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors text-slate-700 font-bold w-12 h-12 flex items-center justify-center">+</button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Number of Months</label>
+                <div className="flex items-center space-x-4">
+                  <button onClick={() => setMonths(Math.max(1, months - 1))} className="p-3 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors text-slate-700 font-bold w-12 h-12 flex items-center justify-center">-</button>
+                  <div className="flex-1 text-center font-bold text-2xl text-slate-800">{months}</div>
+                  <button onClick={() => setMonths(months + 1)} className="p-3 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors text-slate-700 font-bold w-12 h-12 flex items-center justify-center">+</button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleCreateRenewal}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all flex items-center justify-center"
+              >
+                Proceed to Payment
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md w-full">
