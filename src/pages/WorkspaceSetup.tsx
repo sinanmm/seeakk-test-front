@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
+import useWorkspaceStore from '../store/useWorkspaceStore';
 import api from '../services/api';
 
 import WorkspaceSidebar from '../components/WorkspaceSidebar';
@@ -121,22 +122,46 @@ const WorkspaceSetup = () => {
                 normalizeRoleKey(roleName) === 'superadmin'
                     ? Array.from(new Set([...permissionsFromApi, 'SUPERADMIN']))
                     : permissionsFromApi;
-            // Update global state without needing to relogin
+
+            const newWorkspace = response.data.workspace;
+            const billingStatus = newWorkspace?.billingStatus || 'PAYMENT_REQUIRED';
+
+            // Set workspace store configuration immediately
+            useWorkspaceStore.getState().setWorkspaceConfig({
+                companyName: newWorkspace?.companyName || formData.companyName,
+                logoUrl: newWorkspace?.logoUrl || null,
+                employeeCount: newWorkspace?.employeeCount || formData.employeeCount,
+                timeZone: newWorkspace?.timeZone || formData.timeZone,
+                language: newWorkspace?.language || formData.language,
+                currencyLocale: newWorkspace?.currencyLocale || formData.currencyLocale,
+                billingStatus,
+                loadSampleData: Boolean(newWorkspace?.loadSampleData),
+            });
+
+            // Update global auth state without needing to relogin
             updateUser({
                 isOnboarded: true,
-                workspaceId: response.data.workspace?.id || response.data.workspace?._id,
+                workspaceId: newWorkspace?.id || newWorkspace?._id,
                 role: response.data.user?.role || null,
                 permissions,
-                workspace: response.data.workspace
+                workspace: newWorkspace
                     ? {
-                        id: response.data.workspace.id,
-                        companyName: response.data.workspace.companyName,
-                        logoUrl: response.data.workspace.logoUrl || null,
+                        id: newWorkspace.id,
+                        companyName: newWorkspace.companyName,
+                        logoUrl: newWorkspace.logoUrl || null,
+                        billingStatus,
                     }
                     : null,
             });
-            toast.success("Workspace perfectly configured!", { id: toastId });
-            navigate('/dashboard', { replace: true });
+
+            toast.success("Workspace configured! Please complete payment to activate.", { id: toastId });
+
+            const paymentRequestId = response.data.paymentRequest?.id;
+            if (paymentRequestId) {
+                navigate(`/billing/payment/${paymentRequestId}`, { replace: true });
+            } else {
+                navigate('/billing/payment', { replace: true });
+            }
         } catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to configure workspace", { id: toastId });
         } finally {

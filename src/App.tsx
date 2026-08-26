@@ -85,6 +85,9 @@ import SalaryCalculationPage from './pages/salary/SalaryCalculationPage';
 import SalaryStagesPage from './pages/salary/SalaryStagesPage';
 import PendingApprovalsPage from './pages/salary/PendingApprovalsPage';
 
+const PaymentPage = React.lazy(() => import('./pages/subscription/PaymentPage'));
+const PaymentPendingPage = React.lazy(() => import('./pages/subscription/PaymentPendingPage'));
+
 interface RouteProps {
   children: ReactNode;
 }
@@ -582,6 +585,24 @@ function App() {
           >
             <LocationTrackerPage />
           </PermissionRoute>
+        } />
+
+        <Route path="/billing/payment" element={
+          <ProtectedRoute>
+            <PaymentPage />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/billing/payment/:paymentRequestId" element={
+          <ProtectedRoute>
+            <PaymentPage />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/billing/pending" element={
+          <ProtectedRoute>
+            <PaymentPendingPage />
+          </ProtectedRoute>
         } />
 
         <Route path="/master/stage-rules" element={<Navigate to="/admin/stage-rules" replace />} />

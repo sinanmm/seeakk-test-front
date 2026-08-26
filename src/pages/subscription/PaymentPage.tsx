@@ -137,8 +137,8 @@ const PaymentPage: React.FC = () => {
       });
 
       toast.success('Payment submitted successfully!');
+      useWorkspaceStore.getState().setWorkspaceConfig({ billingStatus: 'PAYMENT_PENDING' });
       await fetchWorkspaceConfig(); // This will pull the new PAYMENT_PENDING status
-      window.location.reload();
       
     } catch (err: any) {
       console.error(err);
@@ -152,7 +152,7 @@ const PaymentPage: React.FC = () => {
     return <SeeakkProductLoader fullScreen />;
   }
 
-  if (!paymentRequest || !settings) {
+  if (!paymentRequest) {
     if (mode === 'RENEWAL_SETUP') {
       return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
@@ -211,20 +211,11 @@ const PaymentPage: React.FC = () => {
     );
   }
 
-  if (!settings.upiId || !settings.upiPayeeName) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md w-full border border-red-200">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-slate-800">Payment Configuration Missing</h2>
-          <p className="text-slate-600 mt-2">Payment receiving configuration is unavailable. Please contact SEEAKK support.</p>
-        </div>
-      </div>
-    );
-  }
-
+  const hasValidUpi = Boolean(settings?.upiId && settings?.upiPayeeName);
   // Google Pay / UPI String format: upi://pay?pa=UPI_ID&pn=PAYEE_NAME&am=AMOUNT&tr=REF_ID&cu=INR
-  const upiString = `upi://pay?pa=${encodeURIComponent(settings.upiId)}&pn=${encodeURIComponent(settings.upiPayeeName)}&am=${paymentRequest.calculatedAmount}&tr=${encodeURIComponent(paymentRequest.paymentReference)}&cu=INR`;
+  const upiString = hasValidUpi
+    ? `upi://pay?pa=${encodeURIComponent(settings!.upiId)}&pn=${encodeURIComponent(settings!.upiPayeeName)}&am=${paymentRequest.calculatedAmount}&tr=${encodeURIComponent(paymentRequest.paymentReference)}&cu=INR`
+    : '';
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
@@ -255,33 +246,57 @@ const PaymentPage: React.FC = () => {
             </div>
 
             <div className="p-8 flex flex-col items-center">
-              <div className="bg-white p-4 rounded-xl shadow-inner border-2 border-slate-100 mb-6 relative group">
-                <QRCodeSVG value={upiString} size={220} level="H" includeMargin={true} />
-              </div>
-              
-              <p className="text-sm font-medium text-slate-500 mb-6 uppercase tracking-wider">Scan with any UPI App (GPay, PhonePe, Paytm)</p>
-              
-              <div className="w-full space-y-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                  <div className="overflow-hidden">
-                    <p className="text-xs text-slate-500 uppercase font-semibold">UPI ID</p>
-                    <p className="font-medium text-slate-800 truncate">{settings.upiId}</p>
+              {hasValidUpi ? (
+                <>
+                  <div className="bg-white p-4 rounded-xl shadow-inner border-2 border-slate-100 mb-6 relative group">
+                    <QRCodeSVG value={upiString} size={220} level="H" includeMargin={true} />
                   </div>
-                  <button onClick={() => copyToClipboard(settings.upiId, 'UPI ID')} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors">
-                    <Copy className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                  <div className="overflow-hidden">
-                    <p className="text-xs text-slate-500 uppercase font-semibold">Reference ID (Required)</p>
-                    <p className="font-mono font-medium text-slate-800 truncate">{paymentRequest.paymentReference}</p>
+                  
+                  <p className="text-sm font-medium text-slate-500 mb-6 uppercase tracking-wider">Scan with any UPI App (GPay, PhonePe, Paytm)</p>
+                  
+                  <div className="w-full space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                      <div className="overflow-hidden">
+                        <p className="text-xs text-slate-500 uppercase font-semibold">UPI ID</p>
+                        <p className="font-medium text-slate-800 truncate">{settings?.upiId}</p>
+                      </div>
+                      <button onClick={() => copyToClipboard(settings?.upiId || '', 'UPI ID')} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors">
+                        <Copy className="w-5 h-5" />
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                      <div className="overflow-hidden">
+                        <p className="text-xs text-slate-500 uppercase font-semibold">Reference ID (Required)</p>
+                        <p className="font-mono font-medium text-slate-800 truncate">{paymentRequest.paymentReference}</p>
+                      </div>
+                      <button onClick={() => copyToClipboard(paymentRequest.paymentReference, 'Reference ID')} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors">
+                        <Copy className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => copyToClipboard(paymentRequest.paymentReference, 'Reference ID')} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors">
-                    <Copy className="w-5 h-5" />
-                  </button>
+                </>
+              ) : (
+                <div className="w-full">
+                  <div className="p-6 bg-amber-50 border border-amber-200 rounded-xl text-center mb-6 w-full">
+                    <AlertCircle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                    <h3 className="font-bold text-amber-900 text-sm">Payment Receiving Configuration Not Set Up</h3>
+                    <p className="text-xs text-amber-700 mt-1">Payment receiving configuration is not set up. Please contact SEEAKK support for manual payment processing.</p>
+                  </div>
+
+                  <div className="w-full space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                      <div className="overflow-hidden">
+                        <p className="text-xs text-slate-500 uppercase font-semibold">Reference ID</p>
+                        <p className="font-mono font-medium text-slate-800 truncate">{paymentRequest.paymentReference}</p>
+                      </div>
+                      <button onClick={() => copyToClipboard(paymentRequest.paymentReference, 'Reference ID')} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors">
+                        <Copy className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </motion.div>
 

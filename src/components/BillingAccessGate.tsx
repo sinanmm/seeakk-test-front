@@ -13,10 +13,9 @@ const BillingAccessGate: React.FC<BillingAccessGateProps> = ({ children }) => {
   const billingStatus = useWorkspaceStore((state) => state.billingStatus);
   const isLoaded = useWorkspaceStore((state) => state.isLoaded);
 
-  // If the workspace config hasn't loaded yet, let the normal loading state handle it, 
-  // or return null to avoid flashing unstyled content.
+  // If the workspace config hasn't loaded yet, show loader to avoid flashing unstyled content.
   if (!isLoaded) {
-    return null; 
+    return <SeeakkProductLoader fullScreen={true} />; 
   }
 
   if (billingStatus === 'PAYMENT_REQUIRED' || billingStatus === 'EXPIRED') {
