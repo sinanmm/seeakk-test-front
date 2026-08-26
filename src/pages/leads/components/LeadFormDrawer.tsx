@@ -2148,7 +2148,7 @@ const LeadFormDrawer: React.FC<LeadFormDrawerProps> = ({ isOpen, mode, lead, sel
             fetchPayments();
           }
         }}
-        mode={mode}
+        mode={mode as any}
         currentUser={currentUser}
       />
 

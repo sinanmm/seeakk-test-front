@@ -31,7 +31,7 @@ const PaymentPage: React.FC = () => {
   const [mode, setMode] = useState<'PAYMENT_SUBMISSION' | 'RENEWAL_SETUP'>('PAYMENT_SUBMISSION');
 
   // Renewal setup states
-  const workspace = useWorkspaceStore(state => state.workspace);
+  const workspace = useAuthStore(state => state.user?.workspace) as any;
   const [users, setUsers] = useState<number>(workspace?.approvedUserLimit || 4);
   const [months, setMonths] = useState<number>(1);
 
@@ -206,6 +206,18 @@ const PaymentPage: React.FC = () => {
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-slate-800">No Payment Request Found</h2>
           <p className="text-slate-600 mt-2">Please contact support or set up your workspace billing first.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!settings.upiId || !settings.upiPayeeName) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md w-full border border-red-200">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-slate-800">Payment Configuration Missing</h2>
+          <p className="text-slate-600 mt-2">Payment receiving configuration is unavailable. Please contact SEEAKK support.</p>
         </div>
       </div>
     );
