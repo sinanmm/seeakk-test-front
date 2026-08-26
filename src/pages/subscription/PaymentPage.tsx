@@ -280,8 +280,8 @@ const PaymentPage: React.FC = () => {
                 <div className="w-full">
                   <div className="p-6 bg-amber-50 border border-amber-200 rounded-xl text-center mb-6 w-full">
                     <AlertCircle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-                    <h3 className="font-bold text-amber-900 text-sm">Payment Receiving Configuration Not Set Up</h3>
-                    <p className="text-xs text-amber-700 mt-1">Payment receiving configuration is not set up. Please contact SEEAKK support for manual payment processing.</p>
+                    <h3 className="font-bold text-amber-900 text-sm">Payment Receiving Account Not Configured</h3>
+                    <p className="text-xs text-amber-700 mt-1">Payment receiving account is not configured. Please contact SEEAKK support.</p>
                   </div>
 
                   <div className="w-full space-y-4">
@@ -386,10 +386,10 @@ const PaymentPage: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <button
                   type="submit"
-                  disabled={submitting || !utrNumber || !file}
+                  disabled={submitting || !hasValidUpi || !utrNumber || !file}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed group"
                 >
                   {submitting ? (
@@ -398,6 +398,11 @@ const PaymentPage: React.FC = () => {
                     <>Submit Payment Details</>
                   )}
                 </button>
+                {!hasValidUpi && (
+                  <p className="text-xs text-amber-700 font-medium text-center">
+                    Payment receiving account is not configured. Submissions are temporarily disabled.
+                  </p>
+                )}
               </div>
             </form>
           </motion.div>
