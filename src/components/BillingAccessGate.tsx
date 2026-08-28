@@ -18,6 +18,38 @@ const BillingAccessGate: React.FC<BillingAccessGateProps> = ({ children }) => {
     return <SeeakkProductLoader fullScreen={true} />; 
   }
 
+  if (billingStatus === 'LOCKED' || billingStatus === 'COMPANY_LOCKED') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-slate-200">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600 font-bold text-2xl">
+            🔒
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Workspace Locked</h2>
+          <p className="text-slate-600 text-sm mb-6">
+            This workspace is currently locked by administration. Please contact SEEAKK support for assistance.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (billingStatus === 'SUSPENDED' || billingStatus === 'COMPANY_SUSPENDED') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-slate-200">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 font-bold text-2xl">
+            🚫
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Workspace Suspended</h2>
+          <p className="text-slate-600 text-sm mb-6">
+            This workspace has been suspended by platform administration. Please contact SEEAKK support.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (billingStatus === 'PAYMENT_REQUIRED' || billingStatus === 'EXPIRED') {
     return (
       <Suspense fallback={<SeeakkProductLoader fullScreen={true} />}>
@@ -34,8 +66,7 @@ const BillingAccessGate: React.FC<BillingAccessGateProps> = ({ children }) => {
     );
   }
 
-  // If status is active, expired, or undefined (legacy), let them through the gate. 
-  // (We handle EXPIRED similarly later if needed)
+  // If status is ACTIVE, GRACE, or legacy (null/undefined), render application routes
   return <>{children}</>;
 };
 
