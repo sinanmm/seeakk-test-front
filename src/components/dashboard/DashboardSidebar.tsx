@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
+import useWorkspaceStore from '../../store/useWorkspaceStore';
 import { hasAnyPermission, hasPermission, canAccessPendingApproval } from '../../utils/permission.util';
 import WorkspaceBrandMenu from './WorkspaceBrandMenu';
 
@@ -13,6 +14,7 @@ interface SubMenuItem {
     label: string;
     path: string;
     requiredPermissions?: string[];
+    moduleKey?: string;
 }
 
 interface SidebarItem {
@@ -21,6 +23,7 @@ interface SidebarItem {
     path?: string;
     subItems?: SubMenuItem[];
     requiredPermissions?: string[];
+    moduleKey?: string;
 }
 
 interface SidebarSection {
@@ -32,15 +35,15 @@ const sidebarMenus: SidebarSection[] = [
     {
         title: 'MAIN',
         items: [
-            { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-            { icon: CalendarIcon, label: 'Attendance', path: '/attendance', requiredPermissions: ['view_attendance', 'mark_attendance'] }
+            { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', moduleKey: 'DASHBOARD' },
+            { icon: CalendarIcon, label: 'Attendance', path: '/attendance', requiredPermissions: ['view_attendance', 'mark_attendance'], moduleKey: 'ATTENDANCE' }
         ]
     },
     {
         title: 'MANAGEMENT',
         items: [
             {
-                icon: Users, label: 'Admin Management',
+                icon: Users, label: 'Admin Management', moduleKey: 'ADMIN_MANAGEMENT',
                 subItems: [
                     { label: 'Users', path: '/admin/users', requiredPermissions: ['USERS_VIEW', 'ASSIGNED_USERS_VIEW'] },
                     { label: 'Roles', path: '/admin/roles', requiredPermissions: ['ROLES_VIEW'] },
@@ -63,7 +66,7 @@ const sidebarMenus: SidebarSection[] = [
                 ]
             },
             {
-                icon: Wallet, label: 'Salary Management',
+                icon: Wallet, label: 'Salary Management', moduleKey: 'SALARY_MANAGEMENT',
                 subItems: [
                     { label: 'Salary Calculation', path: '/salary/calculation', requiredPermissions: ['SALARY_CALCULATION_VIEW', 'SALARY_CALCULATION_GENERATE'] },
                     { label: 'Approval Stages', path: '/salary/stages', requiredPermissions: ['SALARY_STAGES_VIEW', 'SALARY_STAGES_CREATE', 'SALARY_STAGES_EDIT'] },
@@ -71,7 +74,7 @@ const sidebarMenus: SidebarSection[] = [
                 ]
             },
             {
-                icon: Settings, label: 'Master Configuration',
+                icon: Settings, label: 'Master Configuration', moduleKey: 'MASTER_CONFIGURATION',
                 subItems: [
                     { label: 'Lead Sources', path: '/admin/lead-source', requiredPermissions: ['LEAD_SOURCES_VIEW', 'SYSTEM_CONFIG'] },
                     { label: 'Products', path: '/admin/products', requiredPermissions: ['PRODUCTS_VIEW', 'SYSTEM_CONFIG'] },
@@ -92,7 +95,7 @@ const sidebarMenus: SidebarSection[] = [
         title: 'LEADS & REPORTS',
         items: [
             {
-                icon: Briefcase, label: 'Leads',
+                icon: Briefcase, label: 'Leads', moduleKey: 'LEADS',
                 subItems: [
                     { label: 'All Leads', path: '/leads', requiredPermissions: ['LEADS_VIEW_ALL', 'LEADS_VIEW_OWN', 'LEADS_VIEW_TEAM', 'LEADS_CREATE'] },
                     { label: 'Closed Leads', path: '/leads/closed', requiredPermissions: ['LEADS_CLOSE', 'LEADS_REOPEN', 'LEADS_VIEW_ALL', 'LEADS_VIEW_OWN', 'LEADS_VIEW_TEAM'] },
@@ -106,23 +109,23 @@ const sidebarMenus: SidebarSection[] = [
                 ]
             },
             {
-                icon: FileText, label: 'Reports', path: '/reports', requiredPermissions: ['REPORTS_VIEW', 'REPORTS_GENERATE']
+                icon: FileText, label: 'Reports', path: '/reports', requiredPermissions: ['REPORTS_VIEW', 'REPORTS_GENERATE'], moduleKey: 'REPORTS'
             },
-            { icon: Table2, label: 'Sheets', path: '/sheets', requiredPermissions: ['SHEETS_VIEW'] },
-            { icon: FileBarChart, label: 'LOB Analysis', path: '/lob-analysis', requiredPermissions: ['LOB_ANALYSIS_VIEW'] }
+            { icon: Table2, label: 'Sheets', path: '/sheets', requiredPermissions: ['SHEETS_VIEW'], moduleKey: 'SHEETS' },
+            { icon: FileBarChart, label: 'LOB Analysis', path: '/lob-analysis', requiredPermissions: ['LOB_ANALYSIS_VIEW'], moduleKey: 'LOB_ANALYSIS' }
         ]
     },
     {
         title: 'SYSTEM',
         items: [
-            { icon: Unplug, label: 'Unlock Staff', path: '/unlock-staff', requiredPermissions: ['USERS_UNLOCK', 'USERS_EDIT', 'SYSTEM_CONFIG'] },
+            { icon: Unplug, label: 'Unlock Staff', path: '/unlock-staff', requiredPermissions: ['USERS_UNLOCK', 'USERS_EDIT', 'SYSTEM_CONFIG'], moduleKey: 'UNLOCK_STAFF' },
             {
                 icon: Settings, label: 'Settings',
                 subItems: [
-                    { label: 'Meta Ads', path: '/admin/meta-ads', requiredPermissions: ['LEAD_SOURCES_VIEW', 'SYSTEM_CONFIG'] },
-                    { label: 'Telephony', path: '/admin/telephony', requiredPermissions: ['SYSTEM_CONFIG'] },
-                    { label: 'WhatsApp Templates', path: '/settings/whatsapp-templates', requiredPermissions: ['WHATSAPP_TEMPLATES_VIEW', 'SYSTEM_CONFIG', 'manage_followup_settings', 'LEADS_VIEW_ALL', 'LEADS_VIEW_OWN', 'LEADS_VIEW_TEAM'] },
-                    { label: 'Automations', path: '/settings/automations', requiredPermissions: ['AUTOMATION_VIEW', 'SYSTEM_CONFIG'] },
+                    { label: 'Meta Ads', path: '/admin/meta-ads', requiredPermissions: ['LEAD_SOURCES_VIEW', 'SYSTEM_CONFIG'], moduleKey: 'META_ADS' },
+                    { label: 'Telephony', path: '/admin/telephony', requiredPermissions: ['SYSTEM_CONFIG'], moduleKey: 'TELEPHONY' },
+                    { label: 'WhatsApp Templates', path: '/settings/whatsapp-templates', requiredPermissions: ['WHATSAPP_TEMPLATES_VIEW', 'SYSTEM_CONFIG', 'manage_followup_settings', 'LEADS_VIEW_ALL', 'LEADS_VIEW_OWN', 'LEADS_VIEW_TEAM'], moduleKey: 'WHATSAPP_TEMPLATES' },
+                    { label: 'Automations', path: '/settings/automations', requiredPermissions: ['AUTOMATION_VIEW', 'SYSTEM_CONFIG'], moduleKey: 'AUTOMATIONS' },
                 ]
             }
         ]
@@ -145,19 +148,17 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, isCollapsed, isActive, setAct
     const navigate = useNavigate();
     const location = useLocation();
 
-    // In collapsed mode, only the truly active route icon should be colored. 
-    // In expanded mode, we also color the currently open accordion.
     const selected = isActive || (!isCollapsed && isExpanded);
 
     const handleClick = () => {
         if (item.path) {
             navigate(item.path);
-            setActiveMenu(null); // Close accordions when navigating directly
+            setActiveMenu(null);
             onNavigate?.();
         } else if (hasSubItems) {
             setActiveMenu(isExpanded ? null : item.label);
             if (isCollapsed && toggleCollapsed) {
-                toggleCollapsed(); // Automatically expand sidebar to show the sub-items!
+                toggleCollapsed();
             }
         }
     };
@@ -239,6 +240,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
     const navigate = useNavigate();
     const logout = useAuthStore((state) => state.logout);
     const user = useAuthStore((state) => state.user);
+    const hasModule = useWorkspaceStore((state) => state.hasModule);
 
     React.useEffect(() => {
         for (const section of sidebarMenus) {
@@ -262,9 +264,19 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
             ...section,
             items: section.items
                 .map((item) => {
+                    // Check top-level item module entitlement
+                    if (item.moduleKey && !hasModule(item.moduleKey)) {
+                        return null;
+                    }
+
                     if (item.subItems?.length) {
                         const visibleSubItems = item.subItems.filter(
                             (subItem) => {
+                                // Check sub-item module entitlement
+                                if (subItem.moduleKey && !hasModule(subItem.moduleKey)) {
+                                    return false;
+                                }
+
                                 if (subItem.path === '/leads/pending-approval') {
                                     return canAccessPendingApproval(user?.permissions || []);
                                 }
@@ -308,65 +320,70 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                         type="button"
                         onClick={onNavigate ?? toggleCollapsed}
                         aria-label="Close navigation menu"
-                        className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        className="ml-auto p-2 text-gray-500 hover:text-gray-900 rounded-lg"
                     >
                         <X size={20} />
                     </button>
                 )}
             </div>
 
-            {/* Menu Sections */}
-            <div className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar">
+            {/* Menu Items */}
+            <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6 custom-scrollbar">
                 {visibleSections.map((section, idx) => (
-                    <div key={idx} className="mb-6">
+                    <div key={idx}>
                         {!isCollapsed && (
-                            <p className="px-3 text-[10px] font-bold tracking-widest text-gray-400 mb-2">{section.title}</p>
+                            <h3 className="px-3 text-[10px] font-bold text-gray-400 tracking-wider mb-2 uppercase">
+                                {section.title}
+                            </h3>
                         )}
-                        {section.items.map((item, i) => {
-                            const isItemActive =
-                                location.pathname === item.path ||
-                                (item.label === 'Dashboard' && location.pathname === '/dashboard') ||
-                                (item.label === 'Reports' && location.pathname.startsWith('/reports')) ||
-                                Boolean(item.subItems?.some((sub) => sub.path === location.pathname || (sub.path === '/admin/meta-ads' && location.pathname === '/settings/meta-ads') || (sub.path === '/admin/telephony' && location.pathname === '/settings/telephony')));
-
-                            return (
-                                <MenuItem
-                                    key={i}
-                                    item={item}
-                                    isCollapsed={isCollapsed}
-                                    isActive={isItemActive}
-                                    activeMenu={activeMenu}
-                                    setActiveMenu={setActiveMenu}
-                                    toggleCollapsed={toggleCollapsed}
-                                    onNavigate={onNavigate}
-                                />
-                            );
-                        })}
+                        <div className="space-y-1">
+                            {section.items.map((item, itemIdx) => {
+                                const isItemActive =
+                                    item.path === location.pathname ||
+                                    Boolean(item.subItems?.some((sub) => sub.path === location.pathname || (sub.path === '/settings/automations' && location.pathname.startsWith('/settings/automations')) || (sub.path === '/admin/meta-ads' && location.pathname === '/settings/meta-ads') || (sub.path === '/admin/telephony' && location.pathname === '/settings/telephony')));
+                                return (
+                                    <MenuItem
+                                        key={itemIdx}
+                                        item={item}
+                                        isCollapsed={isCollapsed}
+                                        isActive={isItemActive}
+                                        setActiveMenu={setActiveMenu}
+                                        activeMenu={activeMenu}
+                                        toggleCollapsed={toggleCollapsed}
+                                        onNavigate={onNavigate}
+                                    />
+                                );
+                            })}
+                        </div>
                     </div>
                 ))}
             </div>
 
-            {/* Expand / Collapse Toggle button at bottom */}
-            <div className="p-4 border-t border-gray-100 shrink-0 flex flex-col gap-3">
-                <button
-                    onClick={handleLogout}
-                    title="Sign Out"
-                    className={`flex items-center justify-center gap-2 w-full py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-bold transition-colors ${isCollapsed ? 'px-0' : 'px-4'
-                        }`}
-                >
-                    <LogOut size={18} />
-                    {!isCollapsed && <span>Sign Out</span>}
-                </button>
-                {!isMobile && (
-                    <div className="flex justify-center">
-                        <button
-                            onClick={toggleCollapsed}
-                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 text-gray-400 transition-colors"
-                        >
-                            <ChevronRight size={18} className={`transition-transform duration-300 ${!isCollapsed ? 'rotate-180' : ''}`} />
-                        </button>
+            {/* User Footer Profile & Actions */}
+            <div className="p-3 border-t border-gray-100 bg-gray-50/50">
+                <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 rounded-xl bg-white border border-gray-100 shadow-xs`}>
+                    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                        <div className="w-9 h-9 rounded-lg bg-emerald-100 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">
+                            {user?.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        {!isCollapsed && (
+                            <div className="flex flex-col min-w-0 pr-2">
+                                <span className="text-sm font-semibold text-gray-800 truncate">{user?.name || 'User'}</span>
+                                <span className="text-xs text-gray-400 truncate capitalize">{user?.role?.name || 'Member'}</span>
+                            </div>
+                        )}
                     </div>
-                )}
+
+                    {!isCollapsed && (
+                        <button
+                            onClick={handleLogout}
+                            title="Sign Out"
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                        >
+                            <LogOut size={16} />
+                        </button>
+                    )}
+                </div>
             </div>
         </motion.aside>
     );

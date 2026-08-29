@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import api from '../services/api';
 
+export interface PlanInfo {
+  id: string;
+  code: string;
+  name: string;
+  pricePerUserMonth?: number;
+  currency?: string;
+}
+
 export interface WorkspaceConfigState {
   currencyLocale: string;
   timeZone: string;
@@ -14,17 +22,15 @@ export interface WorkspaceConfigState {
   isLoading: boolean;
   error: string | null;
 
+  // Plan & Entitlements
+  activePlan: PlanInfo | null;
+  enabledModules: string[];
+  entitlementsLoaded: boolean;
+
   fetchWorkspaceConfig: () => Promise<void>;
-  setWorkspaceConfig: (config: {
-    currencyLocale?: string;
-    timeZone?: string;
-    language?: string;
-    companyName?: string | null;
-    logoUrl?: string | null;
-    employeeCount?: string | null;
-    billingStatus?: string | null;
-    loadSampleData?: boolean;
-  }) => void;
+  fetchEntitlements: () => Promise<void>;
+  setWorkspaceConfig: (config: Partial<WorkspaceConfigState>) => void;
+  hasModule: (moduleKey: string) => boolean;
 }
 
 const DEFAULT_CURRENCY = 'USD';
@@ -44,8 +50,11 @@ export const useWorkspaceStore = create<WorkspaceConfigState>((set, get) => ({
   isLoading: false,
   error: null,
 
+  activePlan: null,
+  enabledModules: [],
+  entitlementsLoaded: false,
+
   fetchWorkspaceConfig: async () => {
-    // Only fetch if not already loaded or loading
     if (get().isLoaded || get().isLoading) return;
 
     set({ isLoading: true, error: null });
@@ -76,6 +85,9 @@ export const useWorkspaceStore = create<WorkspaceConfigState>((set, get) => ({
         isLoading: false,
         error: null,
       });
+
+      // Also trigger entitlements fetch in background
+      get().fetchEntitlements().catch(() => {});
     } catch (err: any) {
       console.warn('[WorkspaceStore] Failed to load workspace configuration; using safe defaults.', err?.message);
       set({
@@ -87,6 +99,31 @@ export const useWorkspaceStore = create<WorkspaceConfigState>((set, get) => ({
         error: err?.message || 'Failed to load workspace config',
       });
     }
+  },
+
+  fetchEntitlements: async () => {
+    try {
+      const res = await api.get('/subscription/entitlements');
+      if (res.data?.success) {
+        set({
+          activePlan: res.data.plan || null,
+          enabledModules: Array.isArray(res.data.enabledModules) ? res.data.enabledModules : [],
+          entitlementsLoaded: true,
+        });
+      }
+    } catch (err: any) {
+      // Non-blocking fallback: if endpoint errors, keep empty or legacy mode
+      console.warn('[WorkspaceStore] Failed to fetch subscription entitlements:', err?.message);
+    }
+  },
+
+  hasModule: (moduleKey: string) => {
+    const state = get();
+    // If entitlements not loaded or empty (legacy unmanaged), allow access
+    if (!state.entitlementsLoaded || state.enabledModules.length === 0) {
+      return true;
+    }
+    return state.enabledModules.includes(moduleKey);
   },
 
   setWorkspaceConfig: (config) => {
