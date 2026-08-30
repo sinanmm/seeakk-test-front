@@ -369,7 +369,9 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isCollapsed,
                         {!isCollapsed && (
                             <div className="flex flex-col min-w-0 pr-2">
                                 <span className="text-sm font-semibold text-gray-800 truncate">{user?.name || 'User'}</span>
-                                <span className="text-xs text-gray-400 truncate capitalize">{user?.role?.name || 'Member'}</span>
+                                <span className="text-xs text-gray-400 truncate capitalize">
+                                    {typeof user?.role === 'string' ? user.role : user?.role?.name || 'Member'}
+                                </span>
                             </div>
                         )}
                     </div>

@@ -25,6 +25,7 @@ export interface User {
     timeZone?: string | null;
     language?: string | null;
     currencyLocale?: string | null;
+    billingStatus?: string | null;
     loadSampleData?: boolean;
   } | null;
   receivedInvites?: Array<{

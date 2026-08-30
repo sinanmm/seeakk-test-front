@@ -114,7 +114,8 @@ const WorkspaceSetup = () => {
         const toastId = toast.loading('Configuring your workspace...');
         try {
             const response = await api.post('/workspace/setup', formData);
-            const roleName = response.data.user?.role?.name || '';
+            const rawRole = response.data.user?.role;
+            const roleName = typeof rawRole === 'string' ? rawRole : rawRole?.name || '';
             const permissionsFromApi = Array.isArray(response.data.user?.permissions)
                 ? response.data.user.permissions.map((permission: unknown) => String(permission))
                 : [];
