@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ShieldAlert, CheckCircle2, AlertTriangle, Globe, MapPin, Loader2, ClipboardList } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, AlertTriangle, Globe, MapPin, Loader2, ClipboardList, X } from 'lucide-react';
 import { checkOutAttendance, markAttendance } from '../services/attendance.api';
 import { dispatchAttendanceRefresh } from '../utils/attendanceRefresh';
 import {
@@ -40,9 +40,10 @@ interface MandatoryAttendanceModalProps {
     expectedCheckOutTime?: string | null;
   };
   onSuccess?: () => void;
+  onClose?: () => void;
 }
 
-export const MandatoryAttendanceModal: React.FC<MandatoryAttendanceModalProps> = ({ status, onSuccess }) => {
+export const MandatoryAttendanceModal: React.FC<MandatoryAttendanceModalProps> = ({ status, onSuccess, onClose }) => {
   const [submitting, setSubmitting] = useState(false);
   const [locating, setLocating] = useState(false);
   const [attendanceType, setAttendanceType] = useState('PRESENT');
@@ -186,20 +187,32 @@ export const MandatoryAttendanceModal: React.FC<MandatoryAttendanceModalProps> =
 
       <div className="relative w-full max-w-xl overflow-hidden rounded-[28px] border border-white/45 bg-white/78 shadow-[0_24px_80px_rgba(15,23,42,0.28)] backdrop-blur-2xl">
         <div className="relative bg-emerald-600 px-8 py-6 text-white">
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-white/10 p-3">
-              {mode === 'checkout' ? <ClipboardList size={24} /> : <CheckCircle2 size={24} />}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-white/10 p-3">
+                {mode === 'checkout' ? <ClipboardList size={24} /> : <CheckCircle2 size={24} />}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold tracking-wide">
+                  {mode === 'checkout' ? 'Daily Check-out Required' : 'Daily Check-in Required'}
+                </h2>
+                <p className="mt-1 text-xs text-emerald-100">
+                  {mode === 'checkout'
+                    ? `Expected checkout: ${status.expectedCheckOutTime || '--:--'}`
+                    : `Expected check-in: ${status.expectedCheckInTime || '--:--'}`}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-wide">
-                {mode === 'checkout' ? 'Daily Check-out Required' : 'Daily Check-in Required'}
-              </h2>
-              <p className="mt-1 text-xs text-emerald-100">
-                {mode === 'checkout'
-                  ? `Expected checkout: ${status.expectedCheckOutTime || '--:--'}`
-                  : `Expected check-in: ${status.expectedCheckInTime || '--:--'}`}
-              </p>
-            </div>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="rounded-full p-2 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            )}
           </div>
         </div>
 
