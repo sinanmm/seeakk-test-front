@@ -38,6 +38,10 @@ export const mapTargetCycleToFormInitial = (
         startDate: toDateInput(period.startDate),
         endDate: toDateInput(period.endDate),
         lockingDate: toDateInput(period.lockingDate),
+        allowSelfUnlock: Boolean(period.allowSelfUnlock),
+        selfUnlockGraceDays: period.allowSelfUnlock && period.selfUnlockGraceDays ? Number(period.selfUnlockGraceDays) : null,
+        lockSupervisorOnRefailure: period.allowSelfUnlock ? Boolean(period.lockSupervisorOnRefailure) : false,
+        enableSupervisorLockChain: period.allowSelfUnlock && period.lockSupervisorOnRefailure ? Boolean(period.enableSupervisorLockChain) : false,
         metrics: period.metrics ? period.metrics.map((metric) => ({
           metricType: metric.metricType,
           targetValue: metric.targetValue,

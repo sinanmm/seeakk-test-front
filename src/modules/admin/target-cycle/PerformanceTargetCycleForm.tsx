@@ -97,6 +97,10 @@ const PerformanceTargetCycleForm: React.FC<Props> = ({ initialData, isSubmitting
         startDate: String(p.startDate).slice(0, 10),
         endDate: String(p.endDate).slice(0, 10),
         lockingDate: String(p.lockingDate).slice(0, 10),
+        allowSelfUnlock: Boolean(p.allowSelfUnlock),
+        selfUnlockGraceDays: p.allowSelfUnlock && p.selfUnlockGraceDays ? Number(p.selfUnlockGraceDays) : null,
+        lockSupervisorOnRefailure: p.allowSelfUnlock ? Boolean(p.lockSupervisorOnRefailure) : false,
+        enableSupervisorLockChain: p.allowSelfUnlock && p.lockSupervisorOnRefailure ? Boolean(p.enableSupervisorLockChain) : false,
         metrics: p.metrics || [],
       }));
     }
@@ -111,6 +115,10 @@ const PerformanceTargetCycleForm: React.FC<Props> = ({ initialData, isSubmitting
       startDate: gen.startDate,
       endDate: gen.endDate,
       lockingDate: gen.lockingDate,
+      allowSelfUnlock: false,
+      selfUnlockGraceDays: null,
+      lockSupervisorOnRefailure: false,
+      enableSupervisorLockChain: false,
       metrics: [
         { metricType: 'LEADS', targetValue: 0, stageTargets: [] },
       ],
@@ -132,12 +140,20 @@ const PerformanceTargetCycleForm: React.FC<Props> = ({ initialData, isSubmitting
           return {
             ...gen,
             targetCount: existing.targetCount,
+            allowSelfUnlock: Boolean(existing.allowSelfUnlock),
+            selfUnlockGraceDays: existing.allowSelfUnlock && existing.selfUnlockGraceDays ? Number(existing.selfUnlockGraceDays) : null,
+            lockSupervisorOnRefailure: existing.allowSelfUnlock ? Boolean(existing.lockSupervisorOnRefailure) : false,
+            enableSupervisorLockChain: existing.allowSelfUnlock && existing.lockSupervisorOnRefailure ? Boolean(existing.enableSupervisorLockChain) : false,
             metrics: existing.metrics || [{ metricType: 'LEADS', targetValue: 0, stageTargets: [] }],
           };
         }
         return {
           ...gen,
           targetCount: 0,
+          allowSelfUnlock: false,
+          selfUnlockGraceDays: null,
+          lockSupervisorOnRefailure: false,
+          enableSupervisorLockChain: false,
           metrics: [{ metricType: 'LEADS', targetValue: 0, stageTargets: [] }],
         };
       });
