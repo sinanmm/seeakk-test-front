@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import api from '../../../services/api';
+import { ENV } from '../../../config/env';
 
 type LeadAvatarProps = {
   name?: string | null;
@@ -66,13 +67,18 @@ const LeadAvatar: React.FC<LeadAvatarProps> = ({
     let nextUrl: string | null = null;
     setFailed(false);
 
-    const isAbsolute = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+    // Normalize absolute API URLs pointing to our backend to relative paths
+    const requestPath = ENV.API_URL && imageUrl.startsWith(ENV.API_URL)
+      ? imageUrl.slice(ENV.API_URL.length)
+      : imageUrl;
+
+    const isAbsolute = requestPath.startsWith('http://') || requestPath.startsWith('https://');
     if (isAbsolute) {
-      setObjectUrl(imageUrl);
+      setObjectUrl(requestPath);
       return undefined;
     }
 
-    api.get(imageUrl, { responseType: 'blob', _suppressGlobalErrorToast: true } as any)
+    api.get(requestPath, { responseType: 'blob', _suppressGlobalErrorToast: true } as any)
       .then((response) => {
         if (!active) return;
         nextUrl = URL.createObjectURL(response.data);
@@ -98,7 +104,10 @@ const LeadAvatar: React.FC<LeadAvatarProps> = ({
           src={src}
           alt={name ? `${name} profile` : 'Lead profile'}
           className="h-full w-full object-cover"
-          onError={() => setFailed(true)}
+          onError={() => {
+            if (imageUrl) failedUrlCache.add(imageUrl);
+            setFailed(true);
+          }}
         />
       ) : (
         <span className={`${textClassName} font-black uppercase text-white`}>{initial}</span>

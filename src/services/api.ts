@@ -175,7 +175,9 @@ api.interceptors.response.use(
     if (status >= 500 && status !== 502 && status !== 503 && status !== 504) {
       showToastError('Internal Server Error: Something went wrong on our end.');
     } else if (status === 404) {
-      console.warn('API 404 Not Found:', originalRequest.url);
+      if (!(originalRequest as any)?._suppressGlobalErrorToast && !(originalRequest as any)?._suppress404Log && !originalRequest.url?.includes('/profile-image')) {
+        console.warn('API 404 Not Found:', originalRequest.url);
+      }
     } else if (status === 403) {
       showToastError('Forbidden: You do not have permission to perform this action.');
     } else if (status === 400) {
