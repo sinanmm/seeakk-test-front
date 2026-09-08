@@ -298,7 +298,10 @@ const Login = () => {
                                     <Mail size={18} className="text-gray-400" />
                                 </div>
                                 <input
+                                    id="login-email"
+                                    name="email"
                                     type="email"
+                                    autoComplete="username email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required

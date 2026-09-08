@@ -88,7 +88,16 @@ const isLikelySocketAuthError = (msg: string): boolean => {
 };
 
 const applyFreshTokenToSocket = (s: Socket, token: string): void => {
-  s.auth = { token };
+  s.auth = (cb: (data: { token: string }) => void) => {
+    void (async () => {
+      try {
+        const resolved = await resolveValidAccessToken();
+        cb({ token: resolved || token || '' });
+      } catch {
+        cb({ token: token || '' });
+      }
+    })();
+  };
 };
 
 const scheduleSocketReconnect = (s: Socket, delayMs = 400): void => {
@@ -261,8 +270,17 @@ export const connectRealtime = (): Socket | null => {
 
   if (socket && lastSocketUserId === userId) {
     if (!socket.connected) {
-      applyFreshTokenToSocket(socket, accessToken);
-      socket.connect();
+      if (isAccessTokenExpired(accessToken) && refreshToken) {
+        void resolveValidAccessToken().then((validToken) => {
+          if (validToken && socket && !socket.connected) {
+            applyFreshTokenToSocket(socket, validToken);
+            socket.connect();
+          }
+        });
+      } else {
+        applyFreshTokenToSocket(socket, accessToken);
+        socket.connect();
+      }
     }
     return socket;
   }

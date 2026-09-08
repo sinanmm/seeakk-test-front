@@ -18,6 +18,11 @@ const avatarColors = [
   'bg-teal-500',
 ];
 
+// In-memory cache for failed/missing avatar URLs to prevent repeated requests
+const failedUrlCache = new Set<string>();
+// In-memory cache for resolved blob URLs across component remounts
+const blobUrlCache = new Map<string, string>();
+
 const LeadAvatar: React.FC<LeadAvatarProps> = ({
   name,
   imageUrl,
@@ -25,8 +30,13 @@ const LeadAvatar: React.FC<LeadAvatarProps> = ({
   textClassName = 'text-sm',
   localPreviewUrl,
 }) => {
-  const [objectUrl, setObjectUrl] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [objectUrl, setObjectUrl] = useState<string | null>(() => {
+    if (imageUrl && blobUrlCache.has(imageUrl)) {
+      return blobUrlCache.get(imageUrl) || null;
+    }
+    return null;
+  });
+  const [failed, setFailed] = useState<boolean>(() => Boolean(imageUrl && failedUrlCache.has(imageUrl)));
   const initial = (name || 'Lead').trim().charAt(0).toUpperCase() || 'L';
   const color = useMemo(() => {
     const code = initial.charCodeAt(0) || 0;
@@ -36,6 +46,18 @@ const LeadAvatar: React.FC<LeadAvatarProps> = ({
   useEffect(() => {
     if (!imageUrl || localPreviewUrl) {
       setObjectUrl(null);
+      setFailed(false);
+      return undefined;
+    }
+
+    if (failedUrlCache.has(imageUrl)) {
+      setFailed(true);
+      setObjectUrl(null);
+      return undefined;
+    }
+
+    if (blobUrlCache.has(imageUrl)) {
+      setObjectUrl(blobUrlCache.get(imageUrl) || null);
       setFailed(false);
       return undefined;
     }
@@ -50,19 +72,20 @@ const LeadAvatar: React.FC<LeadAvatarProps> = ({
       return undefined;
     }
 
-    api.get(imageUrl, { responseType: 'blob' })
+    api.get(imageUrl, { responseType: 'blob', _suppressGlobalErrorToast: true } as any)
       .then((response) => {
         if (!active) return;
         nextUrl = URL.createObjectURL(response.data);
+        blobUrlCache.set(imageUrl, nextUrl);
         setObjectUrl(nextUrl);
       })
       .catch(() => {
+        failedUrlCache.add(imageUrl);
         if (active) setFailed(true);
       });
 
     return () => {
       active = false;
-      if (nextUrl) URL.revokeObjectURL(nextUrl);
     };
   }, [imageUrl, localPreviewUrl]);
 
