@@ -119,7 +119,7 @@ const PaymentPage: React.FC = () => {
       const formData = new FormData();
       formData.append('file', file);
       const uploadRes = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': undefined },
       });
       
       if (!uploadRes.data.success || !uploadRes.data.key) {
